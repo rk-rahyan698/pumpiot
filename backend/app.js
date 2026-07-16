@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const deviceRoutes = require('./routes/deviceRoutes');
+const authRoutes = require('./routes/authRoutes');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -14,6 +15,7 @@ function createApp() {
     res.json({ success: true, message: 'Backend is running' });
   });
 
+  app.use(authRoutes);
   app.use(deviceRoutes);
   app.use(notFound);
   app.use(errorHandler);
