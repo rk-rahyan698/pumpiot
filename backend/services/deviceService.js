@@ -1,4 +1,4 @@
-const { getDevice, normalizeDeviceId, updateDeviceRelayState } = require('../models/deviceStore');
+const { getDevice, normalizeDeviceId, updateDeviceRelayState, updateDeviceHeartbeat } = require('../models/deviceStore');
 
 function buildResponse(device) {
   return {
@@ -69,8 +69,30 @@ function turnDeviceOff(id) {
   };
 }
 
+function registerDeviceHeartbeat(id) {
+  const normalizedId = normalizeDeviceId(id);
+  const device = updateDeviceHeartbeat(normalizedId);
+
+  if (!device) {
+    const error = new Error('Device not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    data: {
+      id: device.id,
+      status: device.status,
+      relayState: device.relayState,
+      updatedAt: device.updatedAt
+    }
+  };
+}
+
 module.exports = {
   getDeviceState,
   turnDeviceOff,
-  turnDeviceOn
+  turnDeviceOn,
+  registerDeviceHeartbeat
 };

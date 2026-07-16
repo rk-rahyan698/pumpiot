@@ -6,3 +6,6 @@ node_modules
 !.vscode/settings.json
 !.vscode/tasks.json
 .DS_Store
+
+backend/database.sqlite
+esp32s3_pump_control.ino

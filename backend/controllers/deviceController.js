@@ -1,4 +1,4 @@
-const { getDeviceState, turnDeviceOff, turnDeviceOn } = require('../services/deviceService');
+const { getDeviceState, turnDeviceOff, turnDeviceOn, registerDeviceHeartbeat } = require('../services/deviceService');
 
 function handleGetDevice(req, res, next) {
   try {
@@ -27,8 +27,21 @@ function handleTurnOffDevice(req, res, next) {
   }
 }
 
+function handleIotPoll(req, res, next) {
+  try {
+    const response = registerDeviceHeartbeat(req.params.id);
+    return res.status(200).json({
+      success: true,
+      relayState: response.data.relayState
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   handleGetDevice,
   handleTurnOffDevice,
-  handleTurnOnDevice
+  handleTurnOnDevice,
+  handleIotPoll
 };

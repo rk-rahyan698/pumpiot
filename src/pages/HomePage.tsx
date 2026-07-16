@@ -25,7 +25,7 @@ export function HomePage() {
     }
   }, [isAuthenticated, setCurrentPage]);
 
-  const { relayState, isSubmitting, feedback, turnOff, turnOn } = useDeviceControl(initialDevice.relayState);
+  const { relayState, connectionState, isSubmitting, feedback, turnOff, turnOn } = useDeviceControl(initialDevice.id, initialDevice.relayState);
 
   useEffect(() => {
     if (feedback) {
@@ -39,7 +39,8 @@ export function HomePage() {
 
   const device = {
     ...initialDevice,
-    relayState
+    relayState,
+    connectionState
   } satisfies DeviceInfo;
 
   return (

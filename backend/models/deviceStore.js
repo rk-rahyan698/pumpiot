@@ -2,6 +2,7 @@ const DEFAULT_DEVICE_STATE = {
   id: null,
   relayState: 'OFF',
   status: 'Offline',
+  lastHeartbeat: null,
   updatedAt: null
 };
 
@@ -48,7 +49,33 @@ function updateDeviceRelayState(id, relayState) {
 }
 
 function getDevice(id) {
-  return ensureDevice(id);
+  const device = ensureDevice(id);
+  if (device && device.status === 'Online' && device.lastHeartbeat) {
+    const elapsed = Date.now() - new Date(device.lastHeartbeat).getTime();
+    if (elapsed > 10000) { // 10 seconds timeout
+      device.status = 'Offline';
+      device.updatedAt = new Date().toISOString();
+      deviceStore.set(device.id, device);
+    }
+  }
+  return device;
+}
+
+function updateDeviceHeartbeat(id) {
+  const device = ensureDevice(id);
+  if (!device) {
+    return null;
+  }
+
+  const updatedDevice = {
+    ...device,
+    status: 'Online',
+    lastHeartbeat: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  deviceStore.set(updatedDevice.id, updatedDevice);
+  return updatedDevice;
 }
 
 function resetDeviceStatus(id) {
@@ -72,5 +99,6 @@ module.exports = {
   getDevice,
   normalizeDeviceId,
   resetDeviceStatus,
-  updateDeviceRelayState
+  updateDeviceRelayState,
+  updateDeviceHeartbeat
 };

@@ -1,15 +1,38 @@
-import { useCallback, useState } from 'react';
-import { turnPumpOff, turnPumpOn } from '../services/deviceService';
-import type { DeviceRelayState } from '../types/device';
+import { useCallback, useEffect, useState } from 'react';
+import { getDeviceState, turnPumpOff, turnPumpOn } from '../services/deviceService';
+import type { DeviceConnectionState, DeviceRelayState } from '../types/device';
 
-export function useDeviceControl(initialRelayState: DeviceRelayState) {
+export function useDeviceControl(deviceId: string, initialRelayState: DeviceRelayState) {
   const [relayState, setRelayState] = useState<DeviceRelayState>(initialRelayState);
+  const [connectionState, setConnectionState] = useState<DeviceConnectionState>('Offline');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const clearFeedback = useCallback(() => {
     setFeedback(null);
   }, []);
+
+  const fetchState = useCallback(async () => {
+    try {
+      const response = await getDeviceState(deviceId);
+      if (response && response.success && response.data) {
+        // Only update local state if we aren't currently submitting a turn ON/OFF request
+        if (!isSubmitting) {
+          setRelayState(response.data.relayState);
+        }
+        setConnectionState(response.data.status);
+      }
+    } catch (error) {
+      console.error('Failed to fetch device state:', error);
+    }
+  }, [deviceId, isSubmitting]);
+
+  // Poll state on mount and every 3 seconds
+  useEffect(() => {
+    fetchState();
+    const interval = setInterval(fetchState, 3000);
+    return () => clearInterval(interval);
+  }, [fetchState]);
 
   const execute = useCallback(async (nextState: DeviceRelayState) => {
     setIsSubmitting(true);
@@ -39,6 +62,7 @@ export function useDeviceControl(initialRelayState: DeviceRelayState) {
 
   return {
     relayState,
+    connectionState,
     isSubmitting,
     feedback,
     clearFeedback,
